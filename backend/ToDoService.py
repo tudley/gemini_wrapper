@@ -14,6 +14,15 @@ class ToDoService:
             "text": f"item {item} successfully added to list"
         }
 
-    def add_to_list(items: list[str]):
+    def add_to_list(self, items: list[str]):
         for item in items:
             self.add_item_to_list(item)
+
+    def add_to_list_metadata(self):
+        return {
+            "name": "add_todo",
+            "description": "Adds an item to the todo list.",
+            "parameters": {
+                
+            }
+        }

@@ -1,10 +1,17 @@
 from google import genai
+from google.genai import types
 import json
 
 
 class Gemini:
-    def __init__(self, api_key):
+    def __init__(
+        self, 
+        api_key: str, 
+        tools: list[types.ToolDict],
+    ):
+
         self.api_key = api_key
+        self.tools = tools
         try:
             self.client = genai.Client(api_key=api_key)
         except Exception as e:
@@ -101,7 +108,7 @@ class Gemini:
             case True:
                 match stream:
                     case False:
-                        self.basic_tool_interact(input=input, tool_names=tool_names)
+                        self.basic_tool_interact(input=input, tools=tool_names)
                         break
                     case True:
                         print("Not implemented yet")
