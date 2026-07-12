@@ -7,11 +7,11 @@ class Gemini:
     def __init__(
         self, 
         api_key: str, 
-        tools: list[types.ToolDict],
+        tools_metadata: list[types.ToolDict],
     ):
 
         self.api_key = api_key
-        self.tools = tools
+        self.tools = [build_tool(tool) for tool in tools_metadata]
         try:
             self.client = genai.Client(api_key=api_key)
         except Exception as e:
@@ -20,6 +20,32 @@ class Gemini:
                 "status": "fail",
                 "text": f"Error instantiating client: {e}"
             }
+
+    def build_tool(self, tool: dict):
+        return {
+            "type": "function",
+            "name": metadata["name"],
+            "description": metadata["description"],
+            "parameters": metadata["parameters"],
+        }
+
+    # add_todo_tool = {
+    #     "type": "function",
+    #     "name": "add_todo",
+    #     "description": "Adds an item to the user's todo list.",
+    #     "parameters": {
+    #         "type": "object",
+    #         "properties": {
+    #             "item": {
+    #                 "type": "string",
+    #                 "description": "The todo item"
+    #             }
+    #         },
+    #         "required": ["item"]
+    #     }
+    # }
+
+
 
     def basic_interact(input: str):
         # Single interaction containing the whole response
