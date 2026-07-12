@@ -15,6 +15,9 @@ def main():
 
     def add_todo(item: str):
         todos.append(item)
+        return {
+            "success": True
+        }
 
 
 
@@ -44,16 +47,31 @@ def main():
         input="Add cycling to my todo list",
         tools=[add_todo_tool]
     )
-    for step in interaction.steps:
-        if step.type == "function_call":
-            print("Function call found")
-            if step.name == "add_todo":
-                print("add_todo called args:")
-                argument = step.arguments.get("item")
-                print(argument)
-                add_todo(argument)
+    
+    function_call_step = next(s for s in interaction.steps if s.type == "function_call")
+    name = function_call_step.name
+    id = function_call_step.id
+    if name == "add_todo":
+        print("add_todo called args:")
+        argument = function_call_step.arguments.get("item")
+        print(argument)
+        result = add_todo(argument)
+    
+    payload = [{
+            "type": "function_result",
+            "name": name,
+            "call_id": id,
+            "result": [{"type": "text", "text": json.dumps(result)}],
+        }]
+    print(payload)
+    interaction_2 = client.interactions.create(
+        model="gemini-3.5-flash",
+        input=payload,
+        tools=[add_todo_tool],
+        previous_interaction_id=interaction.id,
+    ) 
 
-    print("output text: ", interaction.output_text)
+    print("final output text: ", interaction_2.output_text)
     print("updated todos: ", todos)
 
 
