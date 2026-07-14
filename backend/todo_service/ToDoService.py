@@ -1,6 +1,6 @@
-from todo_types import TodoItem
+from todo_service.todo_types import TodoItem
 from typing import Literal, get_origin, get_args
-import datetime
+from datetime import datetime
 import inspect
 from docstring_parser import parse, Docstring
 
@@ -19,6 +19,7 @@ class ToDoService:
         Args:
             title: The title of the item to be added to the todo list
             priority: The priority of the item being added to the todo list
+            complete: Whether the task has been completed
 
         Returns:
             Whether the operation succeeded.
@@ -64,8 +65,9 @@ class ToDoService:
         parsed_docstring = parse(docstring)
 
         tool = {
+            "type": "function",
             "name": method.__name__,
-            "description": inspect.getdoc(method), # TODO: Split to only first line?
+            "description": parsed_docstring.short_description, # TODO: Split to only first line?
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -77,7 +79,7 @@ class ToDoService:
         for arg_title, parameter in signature.parameters.items():
             print("key: ", arg_title)
             print("val: ", parameter)
-            arg_type = annotation_to_str(parameter.annotation)
+            arg_type = annotation_to_schema(parameter.annotation)
             arg_description = get_arg_description(arg_title, parsed_docstring)
             required = True if parameter.default is inspect._empty else False
             if required:
@@ -85,24 +87,28 @@ class ToDoService:
             
         
             param_obj = {
-                arg_title: { # title
-                "type": arg_type, # dataType
-                "description": arg_type # derived from docstring
-                }
+                **arg_type, # dataType
+                "description": arg_description # derived from docstring
             }
-            tool['parameters'][arg_title] = param_obj
+            tool['parameters']['properties'][arg_title] = param_obj
 
         return tool
 
-def annotation_to_str(annotation):
+def annotation_to_schema(annotation):
     if annotation == str:
-        return "string"
+        return {
+            "type": "string"
+        }
 
     if annotation == int:
-        return "integer"
+        return {
+            "type": "integer" 
+        }
 
     if annotation == bool:
-        return "boolean"
+        return {
+            "type": "boolean"
+        }
 
     if get_origin(annotation) is Literal:
         values = list(get_args(annotation))
@@ -113,7 +119,6 @@ def annotation_to_str(annotation):
 
     return {"type": "object"}
 
-    return "object"
 
 def get_arg_description(
     arg_title: str, 
